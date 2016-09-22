@@ -5,6 +5,11 @@ VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Labs_3_Logger", "Labs_3_Logger\Labs_3_Logger.csproj", "{E141376D-1072-4436-BE10-C17852C5A686}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Labs_3_Logger_Tests", "Labs_3_Logger_Tests\Labs_3_Logger_Tests.csproj", "{BE87BE7C-986F-4CB4-8E89-F18C6CFB6EE7}"
+	ProjectSection(ProjectDependencies) = postProject
+		{E141376D-1072-4436-BE10-C17852C5A686} = {E141376D-1072-4436-BE10-C17852C5A686}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +20,10 @@ Global
 		{E141376D-1072-4436-BE10-C17852C5A686}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E141376D-1072-4436-BE10-C17852C5A686}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E141376D-1072-4436-BE10-C17852C5A686}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BE87BE7C-986F-4CB4-8E89-F18C6CFB6EE7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BE87BE7C-986F-4CB4-8E89-F18C6CFB6EE7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BE87BE7C-986F-4CB4-8E89-F18C6CFB6EE7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BE87BE7C-986F-4CB4-8E89-F18C6CFB6EE7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
