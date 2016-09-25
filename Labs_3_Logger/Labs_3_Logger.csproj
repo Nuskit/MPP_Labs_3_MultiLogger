@@ -44,6 +44,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DefaultInterface.cs" />
+    <Compile Include="IConvertMessage.cs" />
+    <Compile Include="TestTargetMemoryStream.cs" />
     <Compile Include="Pair.cs" />
     <Compile Include="TargetFileStream.cs" />
     <Compile Include="ITargetStream.cs" />
@@ -51,6 +53,7 @@
     <Compile Include="Logger.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TestConvertMessage.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

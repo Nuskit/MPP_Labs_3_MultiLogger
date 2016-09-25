@@ -1,15 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace Labs_3_Logger
 {
-  public interface ITargetStream : ILoggerTarget
+  public interface IConvertMessage
   {
-    void Close();
-    void Write(byte[] message);
+    string ConvertMessage(LogLevel logLevel, string message);
   }
 }

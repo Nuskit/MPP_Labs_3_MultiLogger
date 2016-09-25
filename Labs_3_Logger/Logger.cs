@@ -20,9 +20,9 @@ namespace Labs_3_Logger
     private List<string> buffer;
     private int bufferLimit;
     private ILoggerTarget[] targets;
-    private volatile Pair<ManualResetEvent, int> controlThread;
+    private IConvertMessage convertMessage;
+    private volatile Pair<ManualResetEvent, int> controlThread; //first -signal for wait threadPool,second-number working thread
     private volatile List<Pair<int,int>> threadsBlock; //first -current write block, second -last write block
-    
 
     private void IniializeControlThread()
     {
@@ -54,10 +54,16 @@ namespace Labs_3_Logger
       InitializeThreadsBlock(this.bufferLimit);
   }
 
-    public Logger(int bufferLimit, ILoggerTarget[] targets)
+    private void InitalizeConvertMessage(IConvertMessage convertMessage)
+    {
+      this.convertMessage = convertMessage;
+    }
+
+    public Logger(int bufferLimit, ILoggerTarget[] targets,IConvertMessage convertMessage)
     {
       IniializeControlThread();
       InitializeTargets(targets);
+      InitalizeConvertMessage(convertMessage);
       InitializeThreadsBlockWithBuffer(bufferLimit);
     }
 
@@ -70,7 +76,7 @@ namespace Labs_3_Logger
     {
       if (bufferLimit > 0)
       {
-        buffer.Add(FormattedMessage(message));
+        buffer.Add(FormattedMessage(level, message));
         if (buffer.Count == bufferLimit)
         {
           WriteLog();
@@ -126,9 +132,9 @@ namespace Labs_3_Logger
       buffer = new List<string>(bufferLimit);
     }
 
-    private string FormattedMessage(string message)
+    private string FormattedMessage(LogLevel logLevel, string message)
     {
-      return string.Format(string.Format("{0}\n", message));
+      return convertMessage.ConvertMessage(logLevel, message);
     }
 
     private void FlushBuffer(object state)

@@ -18,59 +18,51 @@ namespace Labs_3_Logger
 
     public bool Flush(IEnumerable<string> messageBuffer)
     {
-      Stream currentStream = InitialStream();
-      return currentStream != null ? TryWriteInStream(currentStream, messageBuffer) : false;
+      return TryWriteInStream(messageBuffer);
     }
 
     public async Task<bool> FlushAsync(IEnumerable<string> messageBuffer)
     {
-      Stream currentStream = InitialStream();
-      return currentStream != null ? await TryWriteInStreamAsync(currentStream,messageBuffer) : false;
+      return await TryWriteInStreamAsync(messageBuffer);
     }
     
-    private async Task<bool> TryWriteInStreamAsync(Stream currentStream, IEnumerable<string> messageBuffer)
+    private async Task<bool> TryWriteInStreamAsync(IEnumerable<string> messageBuffer)
     {
-      WriteInStream(currentStream, messageBuffer);
-      await StreamFlushAsync(currentStream);
-      StreamClose(currentStream);
+      WriteInStream(messageBuffer);
+      await StreamFlushAsync(messageBuffer);
+      StreamClose();
       return true;
     }
 
-    private bool TryWriteInStream(Stream currentStream, IEnumerable<string> messageBuffer)
+    private bool TryWriteInStream(IEnumerable<string> messageBuffer)
     {
-      WriteInStream(currentStream, messageBuffer);
-      StreamFlush(currentStream);
-      StreamClose(currentStream);
+      WriteInStream(messageBuffer);
+      StreamFlush(messageBuffer);
+      StreamClose();
       return true;
     }
 
-    private void StreamClose(Stream currentStream)
+    private void StreamClose()
     {
-      currentStream.Close();
+      targetStream.Close();
     }
 
-    private async Task StreamFlushAsync(Stream currentStream)
+    private async Task StreamFlushAsync(IEnumerable<string> messageBuffer)
     {
-      await currentStream.FlushAsync();
+      await targetStream.FlushAsync(messageBuffer);
     }
 
-    private void StreamFlush(Stream currentStream)
+    private void StreamFlush(IEnumerable<string> messageBuffer)
     {
-      currentStream.Flush();
+      targetStream.Flush(messageBuffer);
     }
 
-    private Stream InitialStream()
+    private void WriteInStream(IEnumerable<string> messageBuffer)
     {
-      return targetStream.CreateStream();
+      targetStream.Write(messageBuffer.SelectMany(x => GetBytes(x)).ToArray());
     }
 
-    private void WriteInStream(Stream currentStream, IEnumerable<string> messageBuffer)
-    {
-      byte[] bytes = messageBuffer.SelectMany(x => GetBytes(x)).ToArray();
-      currentStream.Write(bytes, 0, bytes.Length);
-    }
-
-    private byte[] GetBytes(string str)
+    public static byte[] GetBytes(string str)
     {
       byte[] bytes = new byte[str.Length * sizeof(char)];
       System.Buffer.BlockCopy(str.ToCharArray(), 0, bytes, 0, bytes.Length);

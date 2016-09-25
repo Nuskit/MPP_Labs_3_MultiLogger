@@ -2,6 +2,10 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Labs_3_Logger;
 using System.Threading;
+using System.IO;
+using System.Text;
+using System.Net.Sockets;
+using System.Net;
 
 namespace Labs_3_Logger_Tests
 {
@@ -11,12 +15,17 @@ namespace Labs_3_Logger_Tests
     [TestMethod]
     public void TestMethod1()
     {
-      ILogger logger = new Logger(5, new[] { new LoggerTarget(new TargetFileStream()) });
-      for (int i = 0; i < 10000; i++)
+      var stream = new TestTargetMemoryStream();
+      StringBuilder stringBuilder = new StringBuilder(5000);
+      ILogger logger = new Logger(5, new[] { new LoggerTarget(stream) },new TestConvertMessage());
+      for (int i = 0; i < 1000; i++)
       {
-        logger.Log(LogLevel.Debug, string.Format("{0} {1}", i.ToString(), DateTime.Now));
+        logger.Log(LogLevel.Debug, i.ToString());
+        stringBuilder.Append(i.ToString());
       }
       logger.SynchronizeThread();
+      CollectionAssert.AreEqual(LoggerTarget.GetBytes(stringBuilder.ToString()), stream.GetMessage());
+      stream.Close();
     }
   }
 }
