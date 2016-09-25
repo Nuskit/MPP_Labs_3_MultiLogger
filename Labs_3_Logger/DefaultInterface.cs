@@ -15,6 +15,7 @@ namespace Labs_3_Logger
   public interface ILogger
   {
     void Log(LogLevel level, string message);
+    void SynchronizeThread();
   }
 
   public enum LogLevel

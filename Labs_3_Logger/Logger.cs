@@ -19,19 +19,46 @@ namespace Labs_3_Logger
 
     private List<string> buffer;
     private int bufferLimit;
-    private volatile List<Pair<int,int>> threadsBlock; //first -current write block, second -last write block
     private ILoggerTarget[] targets;
+    private volatile Pair<ManualResetEvent, int> controlThread;
+    private volatile List<Pair<int,int>> threadsBlock; //first -current write block, second -last write block
+    
 
-    public Logger(int bufferLimit,ILoggerTarget[] targets)
+    private void IniializeControlThread()
+    {
+      controlThread = new Pair<ManualResetEvent, int>(new ManualResetEvent(true), 0);
+    }
+
+    private void InitializeBuffer(int bufferLimit)
     {
       this.bufferLimit = CheckBufferLimit(bufferLimit);
       buffer = new List<string>(bufferLimit);
+    }
 
-      threadsBlock = new List<Pair<int, int>>(new Pair<int,int>[bufferLimit]);
+    private void InitializeTargets(ILoggerTarget[] targets)
+    {
+      this.targets = targets;
+    }
+
+    private void InitializeThreadsBlock(int bufferLimit)
+    {
+      threadsBlock = new List<Pair<int, int>>(new Pair<int, int>[bufferLimit]);
 
       for (int i = 0; i < bufferLimit; i++)
         threadsBlock[i] = new Pair<int, int>();
-      this.targets = targets;
+    }
+
+    private void InitializeThreadsBlockWithBuffer(int bufferLimit)
+    {
+      InitializeBuffer(bufferLimit);
+      InitializeThreadsBlock(this.bufferLimit);
+  }
+
+    public Logger(int bufferLimit, ILoggerTarget[] targets)
+    {
+      IniializeControlThread();
+      InitializeTargets(targets);
+      InitializeThreadsBlockWithBuffer(bufferLimit);
     }
 
     private int CheckBufferLimit(int bufferLimit)
@@ -52,6 +79,30 @@ namespace Labs_3_Logger
       }
     }
 
+    public void SpawnAndWait(object state)
+    {
+      ThreadPool.QueueUserWorkItem(x => ControlThreadBlock(state));      
+    }
+
+    private void ControlThreadBlock(object state)
+    {
+      controlThread.First = controlThread.Second++ == 0 ? new ManualResetEvent(false) : controlThread.First;
+      try
+      {
+        FlushBuffer(state);
+      }
+      finally
+      {
+        if (--controlThread.Second == 0)
+          controlThread.First.Set();
+      }
+    }
+    
+    public void SynchronizeThread()
+    {
+      controlThread.First.WaitOne();
+    }
+
     private void WriteLog()
     {
       for (int i = 0; i < targets.Length; i++)
@@ -60,14 +111,13 @@ namespace Labs_3_Logger
         if (currentThreadBlock.First == currentThreadBlock.Second)
           currentThreadBlock.First = currentThreadBlock.Second = 0;
 
-        ThreadPool.QueueUserWorkItem(FlushBuffer, 
-          new ThreadInfo
-          {
-            threadBlock = currentThreadBlock,
-            currentBlock = currentThreadBlock.Second++,
-            message = buffer,
-            target=targets.ElementAt(i)
-          });
+        SpawnAndWait(new ThreadInfo
+        {
+          threadBlock = currentThreadBlock,
+          currentBlock = currentThreadBlock.Second++,
+          message = buffer,
+          target = targets.ElementAt(i)
+        });
       }
     }
 
@@ -86,18 +136,15 @@ namespace Labs_3_Logger
       ThreadInfo value = state as ThreadInfo;
       if (value != null)
       {
-        try
-        {
-          Monitor.Enter(value.threadBlock);
+        lock (value.threadBlock)
+        { 
           while (value.threadBlock.First != value.currentBlock)
+          {
             Monitor.Wait(value.threadBlock);
+          }
           value.target.Flush(value.message);
           value.threadBlock.First++;
           Monitor.PulseAll(value.threadBlock);
-        }
-        finally
-        {
-          Monitor.Exit(value.threadBlock);
         }
       }
     } 

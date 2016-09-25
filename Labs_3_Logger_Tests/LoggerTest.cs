@@ -11,13 +11,12 @@ namespace Labs_3_Logger_Tests
     [TestMethod]
     public void TestMethod1()
     {
-      ILogger logger = new Logger(3, new[] { new LoggerTarget(new TargetFileStream()) });
-      for (int i = 0; i < 5000; i++)
+      ILogger logger = new Logger(5, new[] { new LoggerTarget(new TargetFileStream()) });
+      for (int i = 0; i < 10000; i++)
       {
-        Thread.Sleep(100);
         logger.Log(LogLevel.Debug, string.Format("{0} {1}", i.ToString(), DateTime.Now));
       }
-      Thread.Sleep(1500);
+      logger.SynchronizeThread();
     }
   }
 }
