@@ -53,6 +53,12 @@
     <Compile Include="LoggerTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Labs_3_Logger\Labs_3_Logger.csproj">
+      <Project>{E141376D-1072-4436-BE10-C17852C5A686}</Project>
+      <Name>Labs_3_Logger</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
       <ItemGroup>

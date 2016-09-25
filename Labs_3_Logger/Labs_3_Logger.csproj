@@ -44,6 +44,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DefaultInterface.cs" />
+    <Compile Include="Pair.cs" />
+    <Compile Include="TargetFileStream.cs" />
+    <Compile Include="ITargetStream.cs" />
+    <Compile Include="LoggerTarget.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

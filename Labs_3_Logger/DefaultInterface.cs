@@ -8,8 +8,8 @@ namespace Labs_3_Logger
 {
   public interface ILoggerTarget
   {
-    bool Flush();
-    Task<bool> FlushAsync();
+    bool Flush(IEnumerable<string> buffer);
+    Task<bool> FlushAsync(IEnumerable<string> buffer);
   }
 
   public interface ILogger
