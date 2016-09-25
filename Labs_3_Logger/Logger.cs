@@ -11,13 +11,15 @@ namespace Labs_3_Logger
   {
     private class ThreadInfo
     {
-      public int number;
+      public volatile Pair<int, int> threadBlock;
+      public int currentBlock;
       public List<string> message;
+      public ILoggerTarget target;
     }
 
     private List<string> buffer;
     private int bufferLimit;
-    private volatile List<Tuple<object, int, int>> threadBlock; //first -lock object, second -current write block, third- last write block
+    private volatile List<Pair<int,int>> threadsBlock; //first -current write block, second -last write block
     private ILoggerTarget[] targets;
 
     public Logger(int bufferLimit,ILoggerTarget[] targets)
@@ -25,10 +27,10 @@ namespace Labs_3_Logger
       this.bufferLimit = CheckBufferLimit(bufferLimit);
       buffer = new List<string>(bufferLimit);
 
-      threadBlock = new List<Tuple<object, int, int>>(bufferLimit);
-  
+      threadsBlock = new List<Pair<int, int>>(new Pair<int,int>[bufferLimit]);
+
       for (int i = 0; i < bufferLimit; i++)
-        threadBlock[i] = new Tuple<object, int, int>(new object(),0,0);
+        threadsBlock[i] = new Pair<int, int>();
       this.targets = targets;
     }
 
@@ -54,9 +56,18 @@ namespace Labs_3_Logger
     {
       for (int i = 0; i < targets.Length; i++)
       {
-        var currentThreadBlock = threadBlock.ElementAt(i);
-        currentThreadBlock.
-        ThreadPool.QueueUserWorkItem(FlushBuffer, new ThreadInfo { number = i, message = buffer });
+        var currentThreadBlock = threadsBlock.ElementAt(i);
+        if (currentThreadBlock.First == currentThreadBlock.Second)
+          currentThreadBlock.First = currentThreadBlock.Second = 0;
+
+        ThreadPool.QueueUserWorkItem(FlushBuffer, 
+          new ThreadInfo
+          {
+            threadBlock = currentThreadBlock,
+            currentBlock = currentThreadBlock.Second++,
+            message = buffer,
+            target=targets.ElementAt(i)
+          });
       }
     }
 
@@ -75,9 +86,19 @@ namespace Labs_3_Logger
       ThreadInfo value = state as ThreadInfo;
       if (value != null)
       {
-        Monitor.Enter(locker.ElementAt(value.number));
-        targets.ElementAt(value.number).Flush(value.message);
-        Monitor.Exit(locker.ElementAt(value.number));
+        try
+        {
+          Monitor.Enter(value.threadBlock);
+          while (value.threadBlock.First != value.currentBlock)
+            Monitor.Wait(value.threadBlock);
+          value.target.Flush(value.message);
+          value.threadBlock.First++;
+          Monitor.PulseAll(value.threadBlock);
+        }
+        finally
+        {
+          Monitor.Exit(value.threadBlock);
+        }
       }
     } 
   }
