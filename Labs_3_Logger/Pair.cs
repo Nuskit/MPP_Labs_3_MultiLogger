@@ -14,11 +14,11 @@ namespace Labs_3_Logger
 
     public Pair(T first, U second)
     {
-      this.First = first;
-      this.Second = second;
+      this.first = first;
+      this.second = second;
     }
 
-    public T First { get; set; }
-    public U Second { get; set; }
+    public T first;
+    public U second;
   };
 }

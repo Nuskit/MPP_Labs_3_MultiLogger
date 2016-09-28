@@ -32,7 +32,7 @@ namespace Labs_3_Logger
     private void InitializeBuffer(int bufferLimit)
     {
       this.bufferLimit = CheckBufferLimit(bufferLimit);
-      buffer = new List<string>(bufferLimit);
+      buffer = new List<string>(this.bufferLimit);
     }
 
     private void InitializeTargets(ILoggerTarget[] targets)
@@ -40,18 +40,18 @@ namespace Labs_3_Logger
       this.targets = targets;
     }
 
-    private void InitializeThreadsBlock(int bufferLimit)
+    private void InitializeThreadsBlock()
     {
-      threadsBlock = new List<Pair<int, int>>(new Pair<int, int>[bufferLimit]);
+      threadsBlock = new List<Pair<int, int>>(new Pair<int, int>[targets.Length]);
 
-      for (int i = 0; i < bufferLimit; i++)
+      for (int i = 0; i < targets.Length; i++)
         threadsBlock[i] = new Pair<int, int>();
     }
 
     private void InitializeThreadsBlockWithBuffer(int bufferLimit)
     {
       InitializeBuffer(bufferLimit);
-      InitializeThreadsBlock(this.bufferLimit);
+      InitializeThreadsBlock();
   }
 
     private void InitalizeConvertMessage(IConvertMessage convertMessage)
@@ -92,21 +92,22 @@ namespace Labs_3_Logger
 
     private void ControlThreadBlock(object state)
     {
-      controlThread.First = controlThread.Second++ == 0 ? new ManualResetEvent(false) : controlThread.First;
+      controlThread.first = Interlocked.Increment(ref controlThread.second)-1 == 0 ? new ManualResetEvent(false) : controlThread.first;
       try
       {
         FlushBuffer(state);
       }
       finally
       {
-        if (--controlThread.Second == 0)
-          controlThread.First.Set();
+        
+        if (Interlocked.Decrement(ref controlThread.second) == 0)
+          controlThread.first.Set();
       }
     }
     
     public void SynchronizeThread()
     {
-      controlThread.First.WaitOne();
+      controlThread.first.WaitOne();
     }
 
     private void WriteLog()
@@ -114,13 +115,13 @@ namespace Labs_3_Logger
       for (int i = 0; i < targets.Length; i++)
       {
         var currentThreadBlock = threadsBlock.ElementAt(i);
-        if (currentThreadBlock.First == currentThreadBlock.Second)
-          currentThreadBlock.First = currentThreadBlock.Second = 0;
+        if (currentThreadBlock.first == currentThreadBlock.second)
+          currentThreadBlock.first = currentThreadBlock.second = 0;
 
         SpawnAndWait(new ThreadInfo
         {
           threadBlock = currentThreadBlock,
-          currentBlock = currentThreadBlock.Second++,
+          currentBlock = Interlocked.Increment(ref currentThreadBlock.second)-1,
           message = buffer,
           target = targets.ElementAt(i)
         });
@@ -143,13 +144,13 @@ namespace Labs_3_Logger
       if (value != null)
       {
         lock (value.threadBlock)
-        { 
-          while (value.threadBlock.First != value.currentBlock)
+        {
+          while (value.threadBlock.first != value.currentBlock)
           {
             Monitor.Wait(value.threadBlock);
           }
           value.target.Flush(value.message);
-          value.threadBlock.First++;
+          Interlocked.Increment(ref value.threadBlock.first);
           Monitor.PulseAll(value.threadBlock);
         }
       }

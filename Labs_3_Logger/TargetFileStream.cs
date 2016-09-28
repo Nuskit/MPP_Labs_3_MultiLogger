@@ -11,15 +11,21 @@ namespace Labs_3_Logger
   public class TargetFileStream : ITargetStream
   {
     Stream currentStream;
+    String fileName;
 
     public void Close()
     {
       currentStream.Close();
     }
 
+    public TargetFileStream(String fileName)
+    {
+      this.fileName = fileName;
+    }
+
     private Stream CreateStream()
     {
-      return new FileStream("1.txt", FileMode.Append);
+      return new FileStream(fileName, FileMode.Append);
     }
 
     public bool Flush(IEnumerable<string> buffer)

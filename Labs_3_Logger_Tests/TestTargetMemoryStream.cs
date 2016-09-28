@@ -22,8 +22,11 @@ namespace Labs_3_Logger
     {
       if (count == 0)
       {
-        currentStream.Close();
-        currentStream = null;
+        if ((!isNullStream()))
+        {
+          currentStream.Close();
+          currentStream = null;
+        }
       }
       else
         count--;
@@ -31,7 +34,7 @@ namespace Labs_3_Logger
 
     public byte[] GetMessage()
     {
-      return currentStream.ToArray();
+      return (isNullStream()) ? new byte[0] : currentStream.ToArray();
     }
 
     public void Write(byte[] message)
@@ -42,13 +45,20 @@ namespace Labs_3_Logger
 
     public bool Flush(IEnumerable<string> buffer)
     {
-      currentStream.Flush();
+      if (!isNullStream())
+        currentStream.Flush();
       return true;
+    }
+
+    private bool isNullStream()
+    {
+      return currentStream == null;
     }
 
     public async Task<bool> FlushAsync(IEnumerable<string> buffer)
     {
-      await currentStream.FlushAsync();
+      if (!isNullStream())
+        await currentStream.FlushAsync();
       return true;
     }
   }
