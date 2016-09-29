@@ -87,12 +87,12 @@ namespace Labs_3_Logger
 
     public void SpawnAndWait(object state)
     {
+      controlThread.first = Interlocked.Increment(ref controlThread.second) - 1 == 0 ? new ManualResetEvent(false) : controlThread.first;
       ThreadPool.QueueUserWorkItem(x => ControlThreadBlock(state));      
     }
 
     private void ControlThreadBlock(object state)
     {
-      controlThread.first = Interlocked.Increment(ref controlThread.second)-1 == 0 ? new ManualResetEvent(false) : controlThread.first;
       try
       {
         FlushBuffer(state);

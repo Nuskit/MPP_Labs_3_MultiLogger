@@ -31,10 +31,10 @@ namespace Labs_3_Logger_Tests
     {
       var streamFirst = new TestTargetMemoryStream();
       var streamSecond = new TestTargetMemoryStream();
-      StringBuilder stringBuilderFirst = new StringBuilder(5000);
-      StringBuilder stringBuilderSecond = new StringBuilder(5000);
-      ILogger logger = new Logger(5, new[] { new LoggerTarget(streamFirst), new LoggerTarget(streamSecond) }, new TestConvertMessage());
-      for (int i = 0; i < 1000; i++)
+      StringBuilder stringBuilderFirst = new StringBuilder(8000);
+      StringBuilder stringBuilderSecond = new StringBuilder(8000);
+      ILogger logger = new Logger(50, new[] { new LoggerTarget(streamFirst), new LoggerTarget(streamSecond) }, new TestConvertMessage());
+      for (int i = 0; i < 5000; i++)
       {
         logger.Log(LogLevel.Debug, i.ToString());
         stringBuilderFirst.Append(i.ToString());
