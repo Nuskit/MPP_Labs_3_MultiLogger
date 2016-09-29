@@ -88,5 +88,27 @@ namespace Labs_3_Logger_Tests
         stringBuilder.Clear();
       }
     }
+
+    [TestMethod]
+    public void TestUdpClient()
+    {
+      var udpServer= new TestUdpServer("127.0.0.1",10010);
+      var stringBuilder = new StringBuilder(500);
+      ILogger logger = new Logger(1, new[] { new LoggerTarget(
+        new TargetUdp(
+          new AddressInformation() {ip="127.0.0.1",port=10010 },
+          new AddressInformation() {ip="0.0.0.0",port=0 }))
+      }, new TestConvertMessage());
+      udpServer.StartReceive();
+      for (int i = 0; i < 200; i++)
+      {
+        logger.Log(LogLevel.Debug, i.ToString());
+        stringBuilder.Append(i.ToString());
+      }
+      logger.SynchronizeThread();
+      udpServer.Synchronize();
+      udpServer.Close();
+      CollectionAssert.AreEqual(udpServer.GetMessage(), LoggerTarget.GetBytes(stringBuilder.ToString()));
+    }
   }
 }

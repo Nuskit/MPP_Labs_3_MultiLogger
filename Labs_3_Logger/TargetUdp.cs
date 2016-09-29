@@ -50,7 +50,7 @@ namespace Labs_3_Logger
     public void Write(byte[] message)
     {
       if (checkInitializeUdpClient())
-        udpClient.Send(message, message.Length);
+        udpClient.Send(message, message.Length,GenerateEndPoint(server));
     }
 
     private bool checkInitializeUdpClient()
@@ -64,7 +64,6 @@ namespace Labs_3_Logger
       try
       {
         udpClient = new UdpClient(GenerateEndPoint(client));
-        udpClient.Connect(GenerateEndPoint(server));
       }
       catch
       {
