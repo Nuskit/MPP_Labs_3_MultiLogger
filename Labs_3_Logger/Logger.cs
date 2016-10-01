@@ -85,9 +85,20 @@ namespace Labs_3_Logger
       }
     }
 
+    private void DisposeManualEvent()
+    {
+      controlThread.first.Dispose();
+    }
+
+    private ManualResetEvent GenerateNewManualEvent()
+    {
+      DisposeManualEvent();
+      return new ManualResetEvent(false);
+    }
+
     public void SpawnAndWait(object state)
     {
-      controlThread.first = Interlocked.Increment(ref controlThread.second) - 1 == 0 ? new ManualResetEvent(false) : controlThread.first;
+      controlThread.first = Interlocked.Increment(ref controlThread.second) - 1 == 0 ? GenerateNewManualEvent() : controlThread.first;
       ThreadPool.QueueUserWorkItem(x => ControlThreadBlock(state));      
     }
 
@@ -108,6 +119,7 @@ namespace Labs_3_Logger
     public void SynchronizeThread()
     {
       controlThread.first.WaitOne();
+      DisposeManualEvent();
     }
 
     private void WriteLog()
